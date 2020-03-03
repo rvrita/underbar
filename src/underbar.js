@@ -188,6 +188,9 @@
   _.contains = function(collection, target) {
     // TIP: Many iteration problems can be most easily expressed in
     // terms of reduce(). Here's a freebie to demonstrate!
+    if (!Array.isArray(collection)) {
+      collection = Object.values(collection);
+    }
     return _.reduce(collection, function(wasFound, item) {
       if (wasFound) {
         return true;
@@ -200,12 +203,36 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    //iterative solution
+    /*for (var i = 0; i < collection.length; i++) {
+      if (iterator(collection[i]) === false) {
+        return false;
+      }
+    }
+    return true;*/
+    return _.reduce(collection, function(isTrue, item) {
+      if (!isTrue) {
+        return false;
+      }
+      if (iterator) {
+        return !!iterator(item);
+      } else {
+        return !!item;
+      }
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    return !_.every(collection, function (item) {
+      if (iterator) {
+        return !iterator(item);
+      } else {
+        return !item;
+      }
+    });
   };
 
 
@@ -228,11 +255,27 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    for (var i = 1; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        obj[key] = arguments[i][key];
+      }
+    }
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    for (var i = 1; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        if (obj.hasOwnProperty(key)) {
+          continue;
+        } else {
+          obj[key] = arguments[i][key];
+        }
+      }
+    }
+    return obj
   };
 
 
@@ -276,6 +319,14 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var result = {};
+    return function() {
+      var arg = JSON.stringify(arguments);
+      if (!result.hasOwnProperty(arg)) {
+        result[arg] = func.apply(this, arguments);
+      }
+      return result[arg];
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -285,6 +336,10 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return setTimeout(function() {
+      func.apply(this, args);
+    }, wait);
   };
 
 
@@ -299,6 +354,23 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    //Fisher-Yates algorithm
+    var result = array.slice();
+    var m = array.length, t, i;
+
+    // While there remain elements to shuffle…
+    while (m) {
+
+      // Pick a remaining element…
+      i = Math.floor(Math.random() * m--);
+
+      // And swap it with the current element.
+      t = result[m];
+      result[m] = result[i];
+      result[i] = t;
+    }
+
+    return result;
   };
 
 
@@ -326,8 +398,25 @@
   // going together.
   //
   // Example:
-  // _.zip(['a','b','c','d'], [1,2,3]) returns [['a',1], ['b',2], ['c',3], ['d',undefined]]
+  // _.zip(['a','b','c','d'], [1,2,3], [2,3]) returns [['a',1,2], ['b',2,3], ['c',3,undef], ['d',undefined,undef]]
   _.zip = function() {
+    var result = [];
+    /*for (var  i = 0; i < arguments.length; i++) {
+      if (arguments[i].length > maxLength) {
+        maxLength = arguments[i].length;
+      }
+    }*/
+    var maxLength = _.reduce(arguments, function(acc, curr) {
+      return Math.max(acc, curr.length);
+    }, 0);
+    for (var i = 0; i < maxLength; i++) {
+      var row = [];
+      for (var j = 0; j < arguments.length; j++) {
+        row.push(arguments[j][i]);
+      }
+      result.push(row);
+    }
+    return result;
   };
 
   // Takes a multidimensional array and converts it to a one-dimensional array.
@@ -335,6 +424,7 @@
   //
   // Hint: Use Array.isArray to check if something is an array
   _.flatten = function(nestedArray, result) {
+
   };
 
   // Takes an arbitrary number of arrays and produces an array that contains
