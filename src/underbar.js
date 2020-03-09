@@ -385,6 +385,15 @@
   // Calls the method named by functionOrKey on each value in the list.
   // Note: You will need to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
+    if (typeof functionOrKey === 'string') {
+      return _.map(collection, function (item) {
+        return item[functionOrKey]();
+      })
+    } else {
+      return _.map(collection, function (item) {
+        return functionOrKey.apply(item, args);
+      })
+    }
   };
 
   // Sort the object's values by a criterion produced by an iterator.
@@ -392,6 +401,19 @@
   // of that string. For example, _.sortBy(people, 'name') should sort
   // an array of people by their name.
   _.sortBy = function(collection, iterator) {
+    if (!Array.isArray(collection)) {
+      collection = Object.values(collection);
+    }
+    if (typeof iterator === 'string') {
+      collection.sort((a,b) => {
+        return a[iterator] - b[iterator];
+      })
+    } else {
+      collection.sort((a,b) => {
+        return iterator(a) - iterator(b);
+      })      
+    }
+    return collection;
   };
 
   // Zip together two or more arrays with elements of the same index
@@ -423,18 +445,49 @@
   // The new array should contain all elements of the multidimensional array.
   //
   // Hint: Use Array.isArray to check if something is an array
-  _.flatten = function(nestedArray, result) {
-
+  _.flatten = function(nestedArray) {
+    var result = [];
+    // [1,2,3,[4,5]]
+    for (var i =0; i < nestedArray.length; i++) {
+      if (Array.isArray(nestedArray[i])) {
+        result = result.concat(_.flatten(nestedArray[i]));
+      } else {
+        result.push(nestedArray[i]);
+      }
+    }
+    return result;
   };
 
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
   _.intersection = function() {
+    var res = [];
+    outer: 
+    for (var i = 0; i < arguments[0].length; i++) {
+      for (var j = 1; j < arguments.length; j++) {
+        if (!arguments[j].includes(arguments[0][i])) {
+          break outer;
+        }
+      }
+      res.push(arguments[0][i]);
+    }
+    return res;
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
+    var res = [];
+    outer:
+    for (var i = 0; i < arguments[0].length; i++) {
+      for (var j = 1; j < arguments.length; j++) {
+        if (arguments[j].includes(arguments[0][i])) {
+          continue outer;
+        }
+      }
+      res.push(arguments[0][i]);
+    }
+    return res;
   };
 
   // Returns a function, that, when invoked, will only be triggered at most once
